@@ -1,0 +1,81 @@
+{
+  "dummyPost": {
+    "id": 1,
+    "username": "naturelover",
+    "avatar": "https://i.pravatar.cc/150?img=1",
+    "image": "https://images.unsplash.com/photo-1506905925346-21bda4d32df4",
+    "likes": 1243,
+    "caption": "Mountain views hit different at sunrise 🏔️✨"
+  },
+  "dummyStories": [
+    {
+      "id": 1,
+      "username": "alexjohnson",
+      "avatar": "https://i.pravatar.cc/150?img=12",
+      "images": [
+        "https://images.unsplash.com/photo-1511367461989-f85a21fda167",
+        "https://images.unsplash.com/photo-1476514525535-07fb3b4ae5f1",
+        "https://images.unsplash.com/photo-1518173946687-a4c8892bbd9f"
+      ]
+    },
+    {
+      "id": 2,
+      "username": "sarahwilson",
+      "avatar": "https://i.pravatar.cc/150?img=5",
+      "images": [
+        "https://images.unsplash.com/photo-1502877338535-766e1452684a",
+        "https://images.unsplash.com/photo-1540206395-68808572332f"
+      ]
+    },
+    {
+      "id": 3,
+      "username": "mikechen",
+      "avatar": "https://i.pravatar.cc/150?img=33",
+      "images": ["https://images.unsplash.com/photo-1414235077428-338989a2e8c0"]
+    },
+    {
+      "id": 4,
+      "username": "emilydavis",
+      "avatar": "https://i.pravatar.cc/150?img=9",
+      "images": [
+        "https://images.unsplash.com/photo-1481349518771-20055b2a7b24",
+        "https://images.unsplash.com/photo-1504674900247-0877df9cc836",
+        "https://images.unsplash.com/photo-1482049016688-2d3e1b311543"
+      ]
+    },
+    {
+      "id": 5,
+      "username": "davidlee",
+      "avatar": "https://i.pravatar.cc/150?img=14",
+      "images": [
+        "https://images.unsplash.com/photo-1551782450-a2132b4ba21d",
+        "https://images.unsplash.com/photo-1546069901-ba9599a7e63c"
+      ]
+    },
+    {
+      "id": 6,
+      "username": "jessicaparker",
+      "avatar": "https://i.pravatar.cc/150?img=20",
+      "images": [
+        "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d",
+        "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d",
+        "https://images.unsplash.com/photo-1500648767791-00dcc994a43e"
+      ]
+    },
+    {
+      "id": 7,
+      "username": "tomharris",
+      "avatar": "https://i.pravatar.cc/150?img=52",
+      "images": ["https://images.unsplash.com/photo-1541963463532-d68292c34b19"]
+    },
+    {
+      "id": 8,
+      "username": "lisaanderson",
+      "avatar": "https://i.pravatar.cc/150?img=47",
+      "images": [
+        "https://images.unsplash.com/photo-1469854523086-cc02fe5d8800",
+        "https://images.unsplash.com/photo-1476900543704-4312b78632f8"
+      ]
+    }
+  ]
+}
