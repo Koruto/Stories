@@ -12,4 +12,5 @@ export interface Story {
   username: string;
   avatar: string;
   images: string[];
+  isViewed?: boolean;
 }
