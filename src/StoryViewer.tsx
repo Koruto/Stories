@@ -1,81 +1,62 @@
 import { useState, useEffect, useRef } from "react";
 import type { Story } from "./types";
 import { X } from "lucide-react";
+import { preloadStory } from "./utils";
 
 interface StoryViewerProps {
   stories: Story[];
-  initialStoryIndex: number;
+  initialStoryId: number;
   onClose: () => void;
   onStoryViewed: (storyId: number) => void;
 }
 
+const STORY_DURATION = 5000;
+
 export default function StoryViewer({
   stories,
-  initialStoryIndex,
+  initialStoryId,
   onClose,
   onStoryViewed,
 }: StoryViewerProps) {
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(initialStoryIndex);
+  const [currentStoryId, setCurrentStoryId] = useState(initialStoryId);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [progress, setProgress] = useState(0);
-  const startTimeRef = useRef(Date.now());
   const frameIdRef = useRef<number>(0);
+  const startTimeRef = useRef(Date.now());
+  const viewedStoryIdsRef = useRef<Set<number>>(new Set());
 
-  const currentStory = stories[currentStoryIndex];
-  const currentImage = currentStory.images[currentImageIndex];
+  const currentStory = stories.find((s) => s.id === currentStoryId);
+  const currentIndex = stories.findIndex((s) => s.id === currentStoryId);
+  const currentImage = currentStory?.images[currentImageIndex];
 
-  useEffect(() => {
-    onStoryViewed(currentStory.id);
-  }, [currentStoryIndex, currentStory.id, onStoryViewed]);
+  if (!currentStory) return null;
 
-  useEffect(() => {
-    const duration = 5000;
-    startTimeRef.current = Date.now();
-    setProgress(0);
+  const markAsViewed = (storyId: number) => {
+    if (viewedStoryIdsRef.current.has(storyId)) return;
+    const story = stories.find((s) => s.id === storyId);
+    if (story && !story.isViewed) {
+      viewedStoryIdsRef.current.add(storyId);
+      onStoryViewed(storyId);
+    }
+  };
 
-    const animationFrame = () => {
-      const elapsed = Date.now() - startTimeRef.current;
-      const newProgress = Math.min((elapsed / duration) * 100, 100);
+  const goToNextStory = () => {
+    if (currentIndex < stories.length - 1) {
+      const nextStory = stories[currentIndex + 1];
+      setCurrentStoryId(nextStory.id);
+      setCurrentImageIndex(0);
+      markAsViewed(nextStory.id);
+    } else {
+      onClose();
+    }
+  };
 
-      setProgress(newProgress);
-
-      if (elapsed >= duration) {
-        if (currentImageIndex < currentStory.images.length - 1) {
-          setCurrentImageIndex(currentImageIndex + 1);
-        } else if (currentStoryIndex < stories.length - 1) {
-          setCurrentStoryIndex(currentStoryIndex + 1);
-          setCurrentImageIndex(0);
-        } else {
-          onClose();
-        }
-      } else {
-        frameIdRef.current = requestAnimationFrame(animationFrame);
-      }
-    };
-
-    frameIdRef.current = requestAnimationFrame(animationFrame);
-
-    return () => {
-      if (frameIdRef.current) {
-        cancelAnimationFrame(frameIdRef.current);
-      }
-    };
-  }, [
-    currentStoryIndex,
-    currentImageIndex,
-    currentStory.images.length,
-    stories.length,
-    onClose,
-  ]);
-
-  const handlePrevious = () => {
-    setProgress(0);
-    if (currentImageIndex > 0) {
-      setCurrentImageIndex(currentImageIndex - 1);
-    } else if (currentStoryIndex > 0) {
-      const prevStoryIndex = currentStoryIndex - 1;
-      setCurrentStoryIndex(prevStoryIndex);
-      setCurrentImageIndex(stories[prevStoryIndex].images.length - 1);
+  const goToPrevStory = () => {
+    if (currentIndex > 0) {
+      const prevStory = stories[currentIndex - 1];
+      setCurrentStoryId(prevStory.id);
+      setCurrentImageIndex(prevStory.images.length - 1);
+      markAsViewed(prevStory.id);
     }
   };
 
@@ -83,13 +64,89 @@ export default function StoryViewer({
     setProgress(0);
     if (currentImageIndex < currentStory.images.length - 1) {
       setCurrentImageIndex(currentImageIndex + 1);
-    } else if (currentStoryIndex < stories.length - 1) {
-      setCurrentStoryIndex(currentStoryIndex + 1);
-      setCurrentImageIndex(0);
     } else {
-      onClose();
+      goToNextStory();
     }
   };
+
+  const handlePrevious = () => {
+    setProgress(0);
+    if (currentImageIndex > 0) {
+      setCurrentImageIndex(currentImageIndex - 1);
+    } else {
+      goToPrevStory();
+    }
+  };
+
+  useEffect(() => {
+    setCurrentStoryId(initialStoryId);
+    setCurrentImageIndex(0);
+    viewedStoryIdsRef.current.clear();
+  }, [initialStoryId]);
+
+  useEffect(() => {
+    const story = stories.find((s) => s.id === currentStoryId);
+    if (
+      story &&
+      !story.isViewed &&
+      !viewedStoryIdsRef.current.has(currentStoryId)
+    ) {
+      viewedStoryIdsRef.current.add(currentStoryId);
+      onStoryViewed(currentStoryId);
+    }
+  }, [currentStoryId, stories, onStoryViewed]);
+
+  useEffect(() => {
+    const nextStories = stories.slice(currentIndex + 1, currentIndex + 3);
+    nextStories.forEach(preloadStory);
+  }, [currentStoryId, stories, currentIndex]);
+
+  useEffect(() => {
+    startTimeRef.current = Date.now();
+    setProgress(0);
+
+    const animate = () => {
+      const elapsed = Date.now() - startTimeRef.current;
+      const newProgress = Math.min((elapsed / STORY_DURATION) * 100, 100);
+      setProgress(newProgress);
+
+      if (elapsed >= STORY_DURATION) {
+        const story = stories.find((s) => s.id === currentStoryId);
+        if (!story) return;
+
+        if (currentImageIndex < story.images.length - 1) {
+          setCurrentImageIndex(currentImageIndex + 1);
+        } else {
+          const idx = stories.findIndex((s) => s.id === currentStoryId);
+          if (idx < stories.length - 1) {
+            const nextStory = stories[idx + 1];
+            setCurrentStoryId(nextStory.id);
+            setCurrentImageIndex(0);
+            if (
+              !nextStory.isViewed &&
+              !viewedStoryIdsRef.current.has(nextStory.id)
+            ) {
+              viewedStoryIdsRef.current.add(nextStory.id);
+              onStoryViewed(nextStory.id);
+            }
+          } else {
+            onClose();
+          }
+        }
+      } else {
+        frameIdRef.current = requestAnimationFrame(animate);
+      }
+    };
+
+    frameIdRef.current = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frameIdRef.current);
+  }, [
+    currentStoryId,
+    currentImageIndex,
+    currentStory.images.length,
+    stories,
+    onClose,
+  ]);
 
   const getProgressWidth = (index: number) => {
     if (index < currentImageIndex) return "100%";
@@ -132,7 +189,7 @@ export default function StoryViewer({
       </div>
 
       <img
-        key={`${currentStoryIndex}-${currentImageIndex}`}
+        key={`${currentStoryId}-${currentImageIndex}`}
         src={currentImage}
         alt={`Story ${currentImageIndex + 1}`}
         className="w-full h-full object-contain"

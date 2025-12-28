@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Stories from "./Stories";
 import Posts from "./Posts";
 import StoryViewer from "./StoryViewer";
 import data from "./data.json";
 import type { Story } from "./types";
+import { preloadStory } from "./utils";
+import { useHashRouteToggle } from "./hooks/useHashRoute";
 
 const sortStories = (stories: Story[]): Story[] => {
   return [...stories].sort((a, b) => {
@@ -15,27 +17,28 @@ const sortStories = (stories: Story[]): Story[] => {
 };
 
 function App() {
-  const [isViewerOpen, setIsViewerOpen] = useState(false);
-  const [selectedStoryIndex, setSelectedStoryIndex] = useState(0);
+  const [isViewerOpen, toggleViewer] = useHashRouteToggle("#story");
+  const [selectedStoryId, setSelectedStoryId] = useState<number | null>(null);
   const [stories, setStories] = useState<Story[]>(() =>
     sortStories(
       data.dummyStories.map((story) => ({ ...story, isViewed: false }))
     )
   );
 
-  const handleStoryClick = (index: number) => {
-    setSelectedStoryIndex(index);
-    setIsViewerOpen(true);
+  useEffect(() => {
+    if (stories.length > 0) {
+      preloadStory(stories[0]);
+    }
+  }, [stories]);
 
-    setStories((prev) =>
-      prev.map((story, i) =>
-        i === index ? { ...story, isViewed: true } : story
-      )
-    );
+  const handleStoryClick = (index: number) => {
+    const clickedStory = stories[index];
+    setSelectedStoryId(clickedStory.id);
+    toggleViewer(true);
   };
 
   const handleCloseViewer = () => {
-    setIsViewerOpen(false);
+    toggleViewer(false);
     setStories((prev) => sortStories(prev));
   };
 
@@ -58,10 +61,10 @@ function App() {
             <Posts />
           </div>
         </div>
-        {isViewerOpen && (
+        {isViewerOpen && selectedStoryId && (
           <StoryViewer
             stories={stories}
-            initialStoryIndex={selectedStoryIndex}
+            initialStoryId={selectedStoryId}
             onClose={handleCloseViewer}
             onStoryViewed={handleStoryViewed}
           />
